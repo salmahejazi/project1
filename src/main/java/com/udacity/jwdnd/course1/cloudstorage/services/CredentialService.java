@@ -1,23 +1,20 @@
 package com.udacity.jwdnd.course1.cloudstorage.services;
 
-import com.udacity.jwdnd.course1.cloudstorage.mapper.CredentialsMapper;
-import com.udacity.jwdnd.course1.cloudstorage.model.CredentialForm;
-import com.udacity.jwdnd.course1.cloudstorage.model.Credentials;
-import com.udacity.jwdnd.course1.cloudstorage.services.EncryptionService;
+import com.udacity.jwdnd.course1.cloudstorage.mapper.CredentialMapper;
+import com.udacity.jwdnd.course1.cloudstorage.model.Credential;
+import com.udacity.jwdnd.course1.cloudstorage.model.DecryptedCredential;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.util.ArrayList;
 import java.util.List;
 @Service
 public class CredentialService {
-
-    private  CredentialsMapper CredentialsMapper;
+/*
+    private CredentialMapper CredentialMapper;
     private  EncryptionService EncryptionService;
 
-    public CredentialService(CredentialsMapper CredentialsMapper) {
-        this.CredentialsMapper = CredentialsMapper;
+    public CredentialService(CredentialMapper CredentialMapper) {
+        this.CredentialMapper = CredentialMapper;
     }
 
     @PostConstruct
@@ -25,8 +22,8 @@ public class CredentialService {
         System.out.println("Creating CredentialService bean");
     }
 
-    public Credentials getCredential(Integer credentialId) {
-        return CredentialsMapper.findCredential(credentialId);
+    public Credential getCredential(Integer credentialId) {
+        return CredentialMapper.findCredential(credentialId);
     }
 
 
@@ -37,38 +34,88 @@ public class CredentialService {
         random.nextBytes(salt);
         String encodedSalt = Base64.getEncoder().encodeToString(salt);
 
-        Credentials credentials = CredentialsMapper.findCredential(credentialForm.getCredentialId());
-        if(credentials != null) {
-            credentials.setKey(encodedSalt);
-            credentials.setUrl(credentialForm.getCredentialUrl());
-            credentials.setUsername(credentialForm.getUsername());
-            String encryptedPassword = EncryptionService.encryptValue(credentials.getPassword(),encodedSalt);
-            credentials.setPassword(encryptedPassword);
+        Credential credential = CredentialMapper.findCredential(credentialForm.getCredentialId());
+        if(credential != null) {
+            credential.setKey(encodedSalt);
+            credential.setUrl(credentialForm.getCredentialUrl());
+            credential.setUsername(credentialForm.getUsername());
+            String encryptedPassword = EncryptionService.encryptValue(credential.getPassword(),encodedSalt);
+            credential.setPassword(encryptedPassword);
             //credentials.setPassword(credentialForm.getPassword());
-            CredentialsMapper.updateCredential(credentials);
+            CredentialMapper.updateCredential(credential);
         } else {
-            credentials = new Credentials();
-            credentials.setKey(encodedSalt);
-            credentials.setUrl(credentialForm.getUrl());
-            credentials.setUsername(credentialForm.getUsername());
-            String encryptedPassword = EncryptionService.encryptValue(credentials.getPassword(),encodedSalt);
-            credentials.setPassword(encryptedPassword);
+            credential = new Credential();
+            credential.setKey(encodedSalt);
+            credential.setUrl(credentialForm.getUrl());
+            credential.setUsername(credentialForm.getUsername());
+            String encryptedPassword = EncryptionService.encryptValue(credential.getPassword(),encodedSalt);
+            credential.setPassword(encryptedPassword);
             //credentials.setPassword(credentialForm.getPassword());
-            CredentialsMapper.addCredential(credentials);
+            CredentialMapper.addCredential(credential);
         }
     }
 
-    public List<Credentials> getAllCredentials(Integer userId){ return CredentialsMapper.getAllCredentials(userId); }
+    public List<Credential> getAllCredentials(Integer userId){ return CredentialMapper.getAllCredentials(userId); }
 
-    public void deleteCredential(Integer credentialId){  CredentialsMapper.deleteCredential(credentialId);}
+    public void deleteCredential(Integer credentialId){  CredentialMapper.deleteCredential(credentialId);}
 
-    public void updateCredential(Credentials Credentials){
-        Credentials  Credential = new Credentials();
+    public void updateCredential(Credential Credentials){
+        Credential Credential = new Credential();
 
-        String encodedSalt = CredentialsMapper.findKey(Credential.getCredentialId());
+        String encodedSalt = CredentialMapper.findKey(Credential.getCredentialId());
         String encryptedPassword = EncryptionService.encryptValue(Credential.getPassword(),encodedSalt);
         Credential.setPassword(encryptedPassword);
 
-          CredentialsMapper.updateCredential(Credential);
+          CredentialMapper.updateCredential(Credential);
+    }*/
+
+    private final CredentialMapper credentialMapper;
+    private final EncryptionService encryptionService;
+
+    public CredentialService(CredentialMapper credentialMapper, EncryptionService encryptionService) {
+        this.credentialMapper = credentialMapper;
+        this.encryptionService = encryptionService;
+    }
+
+    public void encrypt(Credential credential) {
+        String sKey = encryptionService.getRandomKey();
+        String encryptedPassword = encryptionService.encryptValue(credential.getPassword(), sKey);
+        credential.setPassword(encryptedPassword);
+        credential.setKey(sKey);
+    }
+
+    public String decryptPassword(Credential credential) {
+        return encryptionService.decryptValue(credential.getPassword(), credential.getKey());
+    }
+
+    public void addCredential(Credential credential) {
+        encrypt(credential);
+        Integer id = credential.getCredentialId();
+        if (id == null) {
+            credentialMapper.addCredential(credential);
+        } else {
+            credentialMapper.updateCredential(credential);
+        }
+    }
+
+    public void deleteCredential(Integer id) {
+        credentialMapper.deleteCredential(id);
+    }
+
+    public List<DecryptedCredential> getCredentialByUserId(Integer userId) {
+        List<Credential> credentialList = credentialMapper.getAllCredentials(userId);
+        ArrayList<DecryptedCredential> decryptedCredentials = new ArrayList<>();
+        for (Credential credential : credentialList) {
+            decryptedCredentials.add(getDecryptedCredential(credential));
+        }
+        return decryptedCredentials;
+    }
+
+    public DecryptedCredential getDecryptedCredential(Credential credential) {
+        String decryptedPassword = decryptPassword(credential);
+        return new DecryptedCredential(
+                credential.getCredentialId(), credential.getUrl(), credential.getUsername(), credential.getKey(), credential.getPassword(), decryptedPassword, credential.getUserId());
     }
 }
+
+

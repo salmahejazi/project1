@@ -1,7 +1,7 @@
 package com.udacity.jwdnd.course1.cloudstorage.services;
 
-import com.udacity.jwdnd.course1.cloudstorage.mapper.FilesMapper;
-import com.udacity.jwdnd.course1.cloudstorage.model.Files;
+import com.udacity.jwdnd.course1.cloudstorage.mapper.FileMapper;
+import com.udacity.jwdnd.course1.cloudstorage.model.File;
 import org.springframework.stereotype.Service;
 
 
@@ -10,10 +10,10 @@ import java.util.List;
 @Service
 public class FileService {
 
-    private  FilesMapper FilesMapper;
+    private FileMapper FileMapper;
 
-    public FileService(FilesMapper FilesMapper) {
-        this.FilesMapper = FilesMapper;
+    public FileService(FileMapper FileMapper) {
+        this.FileMapper = FileMapper;
     }
 
     @PostConstruct
@@ -30,19 +30,24 @@ public class FileService {
         FilesMapper.addFile(newFile);
     }*/
 
-    public List<Files> getAllFiles( ) {
-        return FilesMapper.getAllFiles();
+    public List<File> getAllFiles(Integer userId ) {
+        return FileMapper.getAllFiles(userId);
     }
-    public int addFile(Files file){
-        return FilesMapper.addFile(new Files(null, file.getFilename(), file.getContentType(), file.getFileSize(), file.getUserId(), file.getFileData()));
+    public int addFile(File file){
+        return FileMapper.addFile(new File(null, file.getFilename(), file.getContentType(), file.getFileSize(), file.getUserId(), file.getFileData()));
     }
-    public void deleteFile(Integer fileId) {   FilesMapper.deleteFile(fileId); }
 
-    public Files getFile(Integer fileId){ return FilesMapper.findFile(fileId); }
+    public Integer deleteFile(Integer id) {
+        return FileMapper.deleteFile(id);
+    }
+
+    public File getFile(Integer id, Integer userId) {
+        return FileMapper.selectFileByIdAndUserId(id, userId);
+    }
 
     public boolean isDuplicateFileName(Integer userId, String fileName)
     {
-        return FilesMapper.findDuplicateFileName(userId, fileName) != null;
+        return FileMapper.findDuplicateFileName(userId, fileName) != null;
     }
 }
 

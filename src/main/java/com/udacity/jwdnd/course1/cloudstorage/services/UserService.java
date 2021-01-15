@@ -1,7 +1,7 @@
 package com.udacity.jwdnd.course1.cloudstorage.services;
 
-import com.udacity.jwdnd.course1.cloudstorage.mapper.UsersMapper;
-import com.udacity.jwdnd.course1.cloudstorage.model.Users;
+import com.udacity.jwdnd.course1.cloudstorage.mapper.UserMapper;
+import com.udacity.jwdnd.course1.cloudstorage.model.User;
 import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.security.SecureRandom;
@@ -10,10 +10,10 @@ import java.util.Base64;
 @Service
 public class UserService {
 
-    private final UsersMapper userMapper;
+    private final UserMapper userMapper;
     private final HashService hashService;
 
-    public UserService(UsersMapper userMapper, HashService hashService) {
+    public UserService(UserMapper userMapper, HashService hashService) {
         this.userMapper = userMapper;
         this.hashService = hashService;
     }
@@ -24,17 +24,17 @@ public class UserService {
     }
 
     /*Use this method to create a new user profile*/
-    public int createUser(Users user) {
+    public int createUser(User user) {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         String encodedSalt = Base64.getEncoder().encodeToString(salt);
         String hashedPassword = hashService.getHashedValue(user.getPassword(), encodedSalt);
-        return userMapper.insert(new Users(null, user.getUsername(), encodedSalt, hashedPassword, user.getFirstName(), user.getLastName()));
+        return userMapper.insert(new User(null, user.getUsername(), encodedSalt, hashedPassword, user.getFirstName(), user.getLastName()));
     }
 
     /*This method can be used to retrieve a user profile from the database*/
-    public Users getUser(String username) {
+    public User getUser(String username) {
         /*This accesses the userMapper to get it from the database*/
         return userMapper.findUser(username);
     }

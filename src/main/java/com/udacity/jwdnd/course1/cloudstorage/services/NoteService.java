@@ -1,7 +1,6 @@
 package com.udacity.jwdnd.course1.cloudstorage.services;
-import com.udacity.jwdnd.course1.cloudstorage.mapper.NotesMapper;
-import com.udacity.jwdnd.course1.cloudstorage.model.NoteForm;
-import com.udacity.jwdnd.course1.cloudstorage.model.Notes;
+import com.udacity.jwdnd.course1.cloudstorage.mapper.NoteMapper;
+import com.udacity.jwdnd.course1.cloudstorage.model.Note;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -9,14 +8,14 @@ import java.util.List;
 
 @Service
 public class NoteService {
-    private NotesMapper NotesMapper;
+    private NoteMapper NoteMapper;
 
-    public NoteService(NotesMapper NotesMapper) {
-        this.NotesMapper = NotesMapper;
+    public NoteService(NoteMapper NoteMapper) {
+        this.NoteMapper = NoteMapper;
     }
 
-    public Notes getNotes(Integer noteid) {
-        return NotesMapper.findNote(noteid);
+    public Note getNotes(Integer noteid) {
+        return NoteMapper.findNote(noteid);
     }
 
     @PostConstruct
@@ -24,29 +23,28 @@ public class NoteService {
         System.out.println("Creating NoteService bean");
     }
 
-    public void addNote(NoteForm noteForm) {
-        Notes notes = NotesMapper.findNote(noteForm.getNoteId());
-        if (notes != null) {
-            notes.setNotetitle(noteForm.getNoteTitle());
-            notes.setNotedescription(noteForm.getNoteDescription());
-           NotesMapper.updateNote(notes);
+    public int addNote(Note note) {
+        Integer noteId = note.getNoteid();
+        if (noteId == null) {
+            return NoteMapper.addNote(note);
         } else {
-            notes = new Notes();
-            notes.setNotetitle(noteForm.getNoteTitle());
-            notes.setNotedescription(noteForm.getNoteDescription());
-            NotesMapper.addNote(notes);
+            if(NoteMapper.findNote(note.getNoteid())!= null){
+                return NoteMapper.updateNote(note);
+            }else{
+                return NoteMapper.addNote(note);
+            }
         }
     }
 
-    public  List<Notes> getAllNotes(Integer userId){
-        return NotesMapper.getAllNotes(userId);
+    public  List<Note> getAllNotes(Integer userId){
+        return NoteMapper.getAllNotes(userId);
     }
 
-    public void deleteNote(Integer noteId) {   NotesMapper.deleteNote(noteId); }
+    public void deleteNote(Integer noteId) {   NoteMapper.deleteNote(noteId); }
 
-    public void updateNotes(Notes Notes){
+    public void updateNotes(Note Note){
 
-          NotesMapper.updateNote(Notes); }
+          NoteMapper.updateNote(Note); }
 
 
 }

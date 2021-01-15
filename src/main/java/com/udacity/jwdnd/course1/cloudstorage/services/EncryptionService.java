@@ -15,6 +15,18 @@ import java.util.Base64;
 @Service
 public class EncryptionService {
     private Logger logger = LoggerFactory.getLogger(EncryptionService.class);
+    public String getRandomKey() {
+        SecretKey myKey = null;
+        try {
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(256);
+            myKey = keyGen.generateKey();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return Base64.getEncoder().encodeToString(myKey != null ? myKey.getEncoded() : new byte[0]);
+    }
+
 
     public String encryptValue(String data, String key) {
         byte[] encryptedValue = null;
